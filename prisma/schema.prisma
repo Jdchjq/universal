@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  nickname     String
+  avatar       String?
+  role         String         @default("USER")
+  createdAt    DateTime       @default(now())
+  comments     Comment[]
+  likes        UserLike[]
+  watches      UserWatch[]
+  recommendations Recommendation[]
+}
+
+model Artist {
+  id        String     @id @default(cuid())
+  name      String
+  alias     String?
+  bio       String?
+  avatar    String?
+  category  String     @default("MUSICIAN")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  albums    Album[]
+  tracks    Track[]
+  filmCasts FilmCast[]
+
+  @@unique([name, category])
+}
+
+model Album {
+  id          String   @id @default(cuid())
+  title       String
+  artistId    String
+  cover       String?
+  releaseDate DateTime?
+  genre       String?
+  description String?
+  trackCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  artist      Artist   @relation(fields: [artistId], references: [id])
+  tracks      Track[]
+}
+
+model Track {
+  id       String @id @default(cuid())
+  title    String
+  albumId  String
+  artistId String
+  duration Int?
+  trackNo  Int
+  album    Album  @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  artist   Artist @relation(fields: [artistId], references: [id])
+}
+
+model Film {
+  id          String    @id @default(cuid())
+  title       String
+  cover       String?
+  releaseDate DateTime?
+  genre       String?
+  duration    Int?
+  country     String?
+  description String?
+  type        String    @default("MOVIE")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  cast        FilmCast[]
+  images      FilmImage[]
+}
+
+model FilmCast {
+  id            String @id @default(cuid())
+  filmId        String
+  artistId      String
+  role          String
+  characterName String?
+  sortOrder     Int    @default(0)
+  film          Film   @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  artist        Artist @relation(fields: [artistId], references: [id])
+}
+
+model FilmImage {
+  id        String   @id @default(cuid())
+  filmId    String
+  type      String   @default("POSTER") // POSTER | BACKDROP
+  url       String
+  width     Int?
+  height    Int?
+  language  String?                      // iso_639_1, null = no text
+  voteAvg   Float?
+  voteCount Int?
+  isPrimary Boolean  @default(false)
+  sortOrder Int      @default(0)
+  film      Film     @relation(fields: [filmId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id           String   @id @default(cuid())
+  userId       String
+  resourceType String
+  resourceId   String
+  content      String
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserLike {
+  id           String   @id @default(cuid())
+  userId       String
+  resourceType String
+  resourceId   String
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resourceType, resourceId])
+}
+
+model UserWatch {
+  id           String   @id @default(cuid())
+  userId       String
+  resourceType String
+  resourceId   String
+  rating       Int?
+  watchedAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resourceType, resourceId])
+}
+
+model Recommendation {
+  id           String   @id @default(cuid())
+  userId       String
+  resourceType String
+  resourceId   String
+  score        Float
+  reason       String?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

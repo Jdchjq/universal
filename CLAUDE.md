@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # 项目规范
 - TypeScript 严格模式
 - 状态管理： Redux Toolkit
